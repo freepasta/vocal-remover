@@ -16,8 +16,8 @@ class VocalRemoverGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("🎵 Vocal Remover - 人声去除伴奏提取")
-        self.root.geometry("600x500")
-        self.root.minsize(500, 400)
+        self.root.geometry("650x700")
+        self.root.minsize(550, 600)
 
         # 处理状态
         self.is_processing = False

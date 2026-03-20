@@ -1,87 +1,101 @@
-# 人声去除工具 - 伴奏提取
+# Vocal Remover - Extract Instrumental Accompaniment from Music
 
-这是一个基于Meta AI Demucs预训练模型的人声去除工具，可以从MP3歌曲中提取出伴奏。
+Remove vocals from MP3 music and extract instrumental accompaniment using Meta AI's Demucs pre-trained deep learning model.
 
-Demucs是目前效果最好的开源音频分离模型之一，兼容最新Python版本。
+[中文说明 (Chinese README)](README.zh-CN.md)
 
-## 安装依赖
+## Features
+
+- 🎵 Remove vocals from any MP3 song, keep only instrumental accompaniment
+- ✅ Supports MP3 input format
+- 📦 Outputs **both WAV (lossless) and MP3 (320kbps)** formats by default
+- 🏆 Uses Demucs (htdemucs model) - state-of-the-art open source source separation
+- 🐍 Works with Python 3.8+ including Python 3.14
+- 🔧 Works around torchcodec/ffmpeg compatibility issues
+
+## Installation
 
 ```bash
+git clone https://github.com/freepasta/vocal-remover.git
+cd vocal-remover
 pip install -r requirements.txt
 ```
 
-**注意**: 第一次运行时会自动下载预训练模型，需要等一会儿，模型大小约300MB。
+**Note:** First run will automatically download the pre-trained model (~300MB).
 
-如果需要输出MP3格式，还需要安装ffmpeg:
-- Windows: 下载ffmpeg并添加到PATH，或者使用 `choco install ffmpeg`
+You need **ffmpeg** for MP3 decoding/encoding:
+- Windows: Download ffmpeg and add it to PATH, or extract the ffmpeg folder to `bin/`
 - macOS: `brew install ffmpeg`
 - Linux: `sudo apt install ffmpeg`
 
-## 使用方法
+## Usage
 
-### 基本用法（输出WAV格式）
-
-```bash
-python vocal_remover_demucs.py 你的歌曲.mp3
-```
-
-伴奏会输出到 `output/htdemucs/你的歌曲/no_vocals.wav`
-
-### 直接输出MP3格式
+### Basic usage (output both WAV and MP3)
 
 ```bash
-python vocal_remover_demucs.py 你的歌曲.mp3 --mp3
+# Add ffmpeg to PATH (if not already in PATH)
+export PATH="$PWD/bin/ffmpeg-master-latest-win64-gpl/bin:$PATH"
+
+python vocal_remover_api.py your_song.mp3
 ```
 
-### 指定输出目录
+Output will be in:
+```
+output/htdemucs/your_song/
+├── no_vocals.wav    # Lossless instrumental accompaniment
+├── no_vocals.mp3    # 320kbps MP3 instrumental accompaniment (ready to use)
+├── vocals.wav       # Extracted vocals
+└── vocals.mp3       # Extracted vocals (MP3)
+```
+
+### Specify output directory
 
 ```bash
-python vocal_remover_demucs.py 你的歌曲.mp3 -o ./my_output
+python vocal_remover_api.py your_song.mp3 -o ./my_output
 ```
 
-### 使用其他模型
-
-Demucs提供多个模型可选：`htdemucs` (默认), `htdemucs_ft`, `mdx_extra`, `mdx_q`
+### Use different model
 
 ```bash
-python vocal_remover_demucs.py 你的歌曲.mp3 --model mdx_extra
+python vocal_remover_api.py your_song.mp3 --model mdx_extra
 ```
 
-## 参数说明
+Available models: `htdemucs` (default), `htdemucs_ft`, `mdx_extra`, `mdx_q`
 
-- `input`: 输入的MP3文件路径（必需）
-- `-o, --output-dir`: 输出目录，默认为 `output`
-- `--mp3`: 是否转换为MP3格式（需要ffmpeg和pydub）
-- `--model`: 模型名称，默认为 `htdemucs`
+## Windows Drag-and-Drop
 
-## 输出文件
+Copy `docs/run.bat` to your desktop, then drag-and-drop any MP3 file onto `run.bat` icon, processing will start automatically.
 
-处理完成后会得到两个文件：
-- `no_vocals.wav`: 伴奏部分（去除了人声，这就是你需要的）
-- `vocals.wav`: 人声部分
+## Requirements
 
-## 原理
+- Python 3.8+
+- demucs >= 4.0
+- torch
+- soundfile
+- ffmpeg
 
-使用Meta AI开源的Demucs深度学习模型，它基于Hybrid Transformer架构，在大量音乐上预训练过，能够较好地分离人声和伴奏。
+## How it works
 
-`--two-stems vocals` 模式会直接将音频分离为人声和其他（伴奏）两部分。
+Demucs is a deep learning model based on Hybrid Transformer architecture, trained on thousands of songs. It separates the mixed audio into different stems:
+- `vocals` - singing voice
+- `drums` - drums
+- `bass` - bass
+- `other` - other instruments (guitar, piano, keyboards, etc.)
 
-## 优点对比
+This tool adds everything except vocals together to get the full instrumental accompaniment.
 
-相比Spleeter:
-- Demucs分离质量更好
-- 支持最新Python版本（包括3.14）
-- 模型更新，效果更好
+## Example Result
 
-## 说明
+For an MP3 file `example.mp3` (3 minutes):
+- Size: ~5MB MP3 input
+- Output: ~36MB WAV + ~5MB MP3
+- Time: ~2-5 minutes on CPU (faster with GPU)
 
-- 分离效果取决于原音频，大部分流行歌曲效果不错
-- 第一次运行需要下载模型，请耐心等待
-- 处理时间取决于音频长度、电脑性能和是否使用GPU，一般一首3分钟歌曲CPU处理需要2-5分钟
+## Acknowledgments
 
-## 示例
+- [Demucs](https://github.com/facebookresearch/demucs) - Meta AI's state-of-the-art music source separation model
+- All pre-trained weights are from Facebook Research.
 
-```bash
-# 处理 example.mp3，输出到output目录，转换为MP3
-python vocal_remover_demucs.py example.mp3 --mp3
-```
+## License
+
+MIT License

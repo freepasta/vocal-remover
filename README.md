@@ -109,6 +109,13 @@ For an MP3 file `example.mp3` (3 minutes):
 - Output: ~36MB WAV + ~5MB MP3
 - Time: ~2-5 minutes on CPU (faster with GPU)
 
+## Development Documents
+
+The full development process from zero is documented:
+
+- [Development Summary](docs/development_summary.md) - Problems encountered, solutions, and lessons learned
+- [Claude Code Collaboration Guide](docs/claude-code-collaboration.md) - Best practices for effective AI pair programming with Claude Code
+
 ## Acknowledgments
 
 - [Demucs](https://github.com/facebookresearch/demucs) - Meta AI's state-of-the-art music source separation model

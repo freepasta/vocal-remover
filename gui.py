@@ -80,9 +80,10 @@ class VocalRemoverGUI:
         auto_open_check = tk.Checkbutton(options_frame, text="处理完成后自动打开输出文件夹", variable=self.auto_open_var)
         auto_open_check.pack(anchor="w")
 
-        # 日志 Frame
+        # 日志 Frame - 使用固定高度，不抢占按钮空间
         log_frame = tk.LabelFrame(self.root, text="运行日志", padx=10, pady=10)
-        log_frame.pack(fill="both", expand=True, padx=10, pady=5)
+        log_frame.pack(fill="both", expand=False, padx=10, pady=5)
+        log_frame.config(height=20)
 
         # 日志文本框 - 深色背景
         self.log_text = tk.Text(log_frame, bg="#1e1e1e", fg="#d4d4d4", state="disabled")

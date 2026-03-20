@@ -199,13 +199,12 @@ class VocalRemoverGUI:
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1,
-                universal_newlines=True
+                bufsize=1
             )
 
             for line in process.stdout:
-                line = line.rstrip()
+                # 使用utf-8解码，错误替换处理乱码
+                line = line.decode('utf-8', errors='replace').rstrip()
                 if line:
                     self.log(line)
 

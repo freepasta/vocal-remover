@@ -16,6 +16,17 @@ from demucs.audio import convert_audio
 from demucs.apply import apply_model
 
 
+def safe_print(message, file=sys.stdout):
+    """安全打印，处理Windows编码问题"""
+    try:
+        print(message, file=file)
+    except UnicodeEncodeError:
+        # 如果编码失败，替换不可编码字符再打印
+        encoding = getattr(file, 'encoding', 'utf-8')
+        cleaned = message.encode(encoding, errors='replace').decode(encoding)
+        print(cleaned, file=file)
+
+
 def remove_vocals(input_file, output_dir="output", model_name="htdemucs"):
     """
     从输入音频文件中去除人声，保留伴奏
@@ -32,24 +43,24 @@ def remove_vocals(input_file, output_dir="output", model_name="htdemucs"):
     # 确保输出目录存在
     os.makedirs(output_dir, exist_ok=True)
 
-    print(f"正在处理: {input_file}")
-    print(f"使用模型: {model_name}")
-    print("这可能需要几分钟时间，请耐心等待...")
+    safe_print(f"正在处理: {input_file}")
+    safe_print(f"使用模型: {model_name}")
+    safe_print("这可能需要几分钟时间，请耐心等待...")
 
     # 如果输入是MP3，先用ffmpeg转换为WAV，我们再用soundfile读取
     ext = os.path.splitext(input_file)[1].lower()
     if ext == '.mp3':
-        print("检测到MP3格式，使用ffmpeg转换为WAV...")
+        safe_print("检测到MP3格式，使用ffmpeg转换为WAV...")
         temp_wav = os.path.join(output_dir, f"temp_input_{os.path.splitext(os.path.basename(input_file))[0]}.wav")
         convert_cmd = ["ffmpeg", "-y", "-analyzeduration", "100M", "-probesize", "100M", "-i", input_file, temp_wav]
         result = subprocess.run(convert_cmd)
         if result.returncode != 0:
-            print(f"错误: MP3转WAV失败，请检查ffmpeg是否正确安装", file=sys.stderr)
+            safe_print(f"错误: MP3转WAV失败，请检查ffmpeg是否正确安装", file=sys.stderr)
             sys.exit(1)
         input_file = temp_wav
 
     # 使用soundfile读取音频（绕过torchaudio/torchcodec问题）
-    print(f"读取音频文件: {input_file}")
+    safe_print(f"读取音频文件: {input_file}")
     wav, sr = sf.read(input_file)
     # 转换为 (channels, samples) 格式
     if len(wav.shape) == 2:
@@ -59,7 +70,7 @@ def remove_vocals(input_file, output_dir="output", model_name="htdemucs"):
     wav = torch.from_numpy(wav).float()
 
     # 获取模型
-    print(f"加载模型 {model_name}...")
+    safe_print(f"加载模型 {model_name}...")
     model = get_model(model_name)
     model.eval()
 
@@ -68,7 +79,7 @@ def remove_vocals(input_file, output_dir="output", model_name="htdemucs"):
     wav = wav[None, :, :]  # 添加batch维度
 
     # 分离
-    print("正在分离人声和伴奏...")
+    safe_print("正在分离人声和伴奏...")
     with torch.no_grad():
         estimates = apply_model(model, wav, device='cpu')
     estimates = estimates[0]  # 移除batch维度
@@ -103,13 +114,13 @@ def remove_vocals(input_file, output_dir="output", model_name="htdemucs"):
     accompaniment_mp3_path = os.path.join(output_file_dir, "no_vocals.mp3")
     vocals_mp3_path = os.path.join(output_file_dir, "vocals.mp3")
 
-    print(f"保存WAV结果...")
+    safe_print(f"保存WAV结果...")
     # 转换回numpy保存
     sf.write(accompaniment_path, accompaniment.cpu().numpy().T, model.samplerate)
     sf.write(vocals_path, vocals.cpu().numpy().T, model.samplerate)
 
     # 同时输出MP3格式，320kbps高质量
-    print(f"转换输出MP3...")
+    safe_print(f"转换输出MP3...")
     convert_to_mp3(accompaniment_path, accompaniment_mp3_path, bitrate='320k')
     convert_to_mp3(vocals_path, vocals_mp3_path, bitrate='320k')
 
@@ -117,11 +128,11 @@ def remove_vocals(input_file, output_dir="output", model_name="htdemucs"):
     if ext == '.mp3' and os.path.exists(input_file):
         os.unlink(input_file)
 
-    print(f"\n处理完成！")
-    print(f"WAV伴奏: {accompaniment_path}")
-    print(f"MP3伴奏: {accompaniment_mp3_path}")
-    print(f"WAV人声: {vocals_path}")
-    print(f"MP3人声: {vocals_mp3_path}")
+    safe_print(f"\n处理完成！")
+    safe_print(f"WAV伴奏: {accompaniment_path}")
+    safe_print(f"MP3伴奏: {accompaniment_mp3_path}")
+    safe_print(f"WAV人声: {vocals_path}")
+    safe_print(f"MP3人声: {vocals_mp3_path}")
 
     return accompaniment_path
 
@@ -134,13 +145,13 @@ def convert_to_mp3(wav_file, mp3_file, bitrate='320k'):
         cmd = ["ffmpeg", "-y", "-i", wav_file, "-b:a", bitrate, mp3_file]
         result = subprocess.run(cmd, capture_output=True)
         if result.returncode == 0:
-            print(f"  ✓ {mp3_file}")
+            safe_print(f"  ✓ {mp3_file}")
             return mp3_file
         else:
-            print(f"  ✗ 转换失败 {wav_file}", file=sys.stderr)
+            safe_print(f"  ✗ 转换失败 {wav_file}", file=sys.stderr)
             return None
     except Exception as e:
-        print(f"  ✗ 转换失败 {wav_file}: {e}", file=sys.stderr)
+        safe_print(f"  ✗ 转换失败 {wav_file}: {e}", file=sys.stderr)
         return None
 
 
@@ -155,17 +166,17 @@ def main():
 
     # 检查输入文件是否存在
     if not os.path.exists(args.input):
-        print(f"错误: 输入文件 {args.input} 不存在", file=sys.stderr)
+        safe_print(f"错误: 输入文件 {args.input} 不存在", file=sys.stderr)
         sys.exit(1)
 
     # 检查ffmpeg
     try:
         result = subprocess.run(["ffmpeg", "-version"], capture_output=True)
         if result.returncode != 0:
-            print("错误: ffmpeg未找到，请确保ffmpeg在PATH中", file=sys.stderr)
+            safe_print("错误: ffmpeg未找到，请确保ffmpeg在PATH中", file=sys.stderr)
             sys.exit(1)
     except FileNotFoundError:
-        print("错误: ffmpeg未找到，请确保ffmpeg在PATH中", file=sys.stderr)
+        safe_print("错误: ffmpeg未找到，请确保ffmpeg在PATH中", file=sys.stderr)
         sys.exit(1)
 
     # 执行人声去除
@@ -177,9 +188,9 @@ def main():
         mp3_path = os.path.join(args.output_dir, f"{base_name}_伴奏.mp3")
         convert_to_mp3(accompaniment_path, mp3_path)
 
-    print("\n使用说明:")
-    print("- no_vocals.wav 就是伴奏文件 (去除了人声) ← 这是你需要的")
-    print("- vocals.wav 是提取出的人声")
+    safe_print("\n使用说明:")
+    safe_print("- no_vocals.wav 就是伴奏文件 (去除了人声) ← 这是你需要的")
+    safe_print("- vocals.wav 是提取出的人声")
 
 
 if __name__ == "__main__":

@@ -16,8 +16,8 @@ class VocalRemoverGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("🎵 Vocal Remover - 人声去除伴奏提取")
-        self.root.geometry("650x700")
-        self.root.minsize(550, 600)
+        self.root.geometry("650x800")
+        self.root.minsize(550, 700)
 
         # 处理状态
         self.is_processing = False
@@ -82,8 +82,7 @@ class VocalRemoverGUI:
 
         # 日志 Frame - 使用固定高度，不抢占按钮空间
         log_frame = tk.LabelFrame(self.root, text="运行日志", padx=10, pady=10)
-        log_frame.pack(fill="both", expand=False, padx=10, pady=5)
-        log_frame.config(height=20)
+        log_frame.pack(fill="both", expand=True, padx=10, pady=5)
 
         # 日志文本框 - 深色背景
         self.log_text = tk.Text(log_frame, bg="#1e1e1e", fg="#d4d4d4", state="disabled")

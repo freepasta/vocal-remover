@@ -1,87 +1,114 @@
 # 人声去除工具 - 伴奏提取
 
+[English README](README.md)
+
 这是一个基于Meta AI Demucs预训练模型的人声去除工具，可以从MP3歌曲中提取出伴奏。
 
 Demucs是目前效果最好的开源音频分离模型之一，兼容最新Python版本。
 
-## 安装依赖
+## 特性
+
+- 🎵 从任意MP3歌曲中去除人声，只保留伴奏
+- ✅ 支持MP3输入格式
+- 📦 默认同时输出 **WAV无损** 和 **MP3 320kbps** 两种格式
+- 🏆 使用 Demucs (htdemucs 模型) - 业界领先的开源分离效果
+- 🐍 兼容 Python 3.8+ 包括 Python 3.14
+- 🔧 绕过了 torchcodec/ffmpeg 版本兼容问题
+- 🖥️ **图形界面** - 不需要命令行知识，点点鼠标就能用！
+
+## 安装
 
 ```bash
+git clone https://github.com/freepasta/vocal-remover.git
+cd vocal-remover
 pip install -r requirements.txt
 ```
 
-**注意**: 第一次运行时会自动下载预训练模型，需要等一会儿，模型大小约300MB。
+**注意**: 第一次运行会自动下载预训练模型 (~300MB)。
 
-如果需要输出MP3格式，还需要安装ffmpeg:
-- Windows: 下载ffmpeg并添加到PATH，或者使用 `choco install ffmpeg`
+你需要安装 **ffmpeg** 来解码/编码MP3:
+- Windows: 下载ffmpeg解压到 `bin/` 目录，或者添加到PATH
 - macOS: `brew install ffmpeg`
 - Linux: `sudo apt install ffmpeg`
 
 ## 使用方法
 
-### 基本用法（输出WAV格式）
+### 图形界面 (推荐)
 
+直接运行:
 ```bash
-python vocal_remover_demucs.py 你的歌曲.mp3
+python gui.py
 ```
 
-伴奏会输出到 `output/htdemucs/你的歌曲/no_vocals.wav`
+打开GUI窗口后，只需要三步:
+1. 点击 **[📁 选择文件]** 选择你的MP3
+2. 输出目录会**自动设置**好，默认就是 `输入文件所在目录/output/`
+3. 点击 **[🚀 开始处理]** 等待完成
+4. 处理完会自动打开输出文件夹，可以直接拿到伴奏
 
-### 直接输出MP3格式
+### 命令行用法
 
 ```bash
-python vocal_remover_demucs.py 你的歌曲.mp3 --mp3
+# 添加ffmpeg到 PATH
+export PATH="$PWD/bin/ffmpeg-master-latest-win64-gpl/bin:$PATH"
+
+python vocal_remover_api.py 你的歌曲.mp3
+```
+
+输出:
+```
+output/htdemucs/你的歌曲/
+├── no_vocals.wav    # 无损伴奏
+├── no_vocals.mp3    # 320kbps MP3伴奏 ← 直接就能用
+├── vocals.wav       # 提取出的人声
+└── vocals.mp3       # 提取出的人声 (MP3)
 ```
 
 ### 指定输出目录
 
 ```bash
-python vocal_remover_demucs.py 你的歌曲.mp3 -o ./my_output
+python vocal_remover_api.py 你的歌曲.mp3 -o ./my_output
 ```
 
-### 使用其他模型
-
-Demucs提供多个模型可选：`htdemucs` (默认), `htdemucs_ft`, `mdx_extra`, `mdx_q`
+### 更换模型
 
 ```bash
-python vocal_remover_demucs.py 你的歌曲.mp3 --model mdx_extra
+python vocal_remover_api.py 你的歌曲.mp3 --model mdx_extra
 ```
 
-## 参数说明
+可用模型: `htdemucs` (默认), `htdemucs_ft`, `mdx_extra`, `mdx_q`
 
-- `input`: 输入的MP3文件路径（必需）
-- `-o, --output-dir`: 输出目录，默认为 `output`
-- `--mp3`: 是否转换为MP3格式（需要ffmpeg和pydub）
-- `--model`: 模型名称，默认为 `htdemucs`
+## Windows 拖放运行
 
-## 输出文件
+复制 `docs/run.bat` 到桌面，直接把MP3文件拖放到 `run.bat` 图标上就会自动开始处理。
 
-处理完成后会得到两个文件：
-- `no_vocals.wav`: 伴奏部分（去除了人声，这就是你需要的）
-- `vocals.wav`: 人声部分
+## 输出说明
 
-## 原理
+处理完成后，默认同时输出两种格式:
+- `no_vocals.wav` - 无损音质WAV伴奏
+- `no_vocals.mp3` - 320kbps高质量MP3伴奏 ← 直接就能播放使用
 
-使用Meta AI开源的Demucs深度学习模型，它基于Hybrid Transformer架构，在大量音乐上预训练过，能够较好地分离人声和伴奏。
+## 技术原理
 
-`--two-stems vocals` 模式会直接将音频分离为人声和其他（伴奏）两部分。
+Demucs 是基于 Hybrid Transformer 架构的深度学习模型，在数千首歌曲上训练完成。它能把混合音频分离成不同音轨:
+- `vocals` - 人声演唱
+- `drums` - 鼓点
+- `bass` - 贝斯
+- `other` - 其他乐器 (吉他、钢琴、键盘等等)
 
-## 优点对比
+本工具把除了人声之外的所有音轨加起来，得到完整的伴奏。
 
-相比Spleeter:
-- Demucs分离质量更好
-- 支持最新Python版本（包括3.14）
-- 模型更新，效果更好
+## 示例结果
 
-## 说明
+对于一首3分钟的MP3歌曲 (~5MB):
+- 输出: ~36MB WAV + ~5MB MP3
+- CPU处理时间: 2-5分钟 (GPU更快)
 
-- 分离效果取决于原音频，大部分流行歌曲效果不错
-- 第一次运行需要下载模型，请耐心等待
-- 处理时间取决于音频长度、电脑性能和是否使用GPU，一般一首3分钟歌曲CPU处理需要2-5分钟
+## 感谢
 
-## 示例
+- [Demucs](https://github.com/facebookresearch/demucs) - Meta AI 出品的顶尖音乐分离模型
+- 所有预训练权重来自 Facebook Research
 
-```bash
-# 处理 example.mp3，输出到output目录，转换为MP3
-python vocal_remover_demucs.py example.mp3 --mp3
-```
+## 许可证
+
+MIT License

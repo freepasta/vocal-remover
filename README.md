@@ -12,6 +12,7 @@ Remove vocals from MP3 music and extract instrumental accompaniment using Meta A
 - 🏆 Uses Demucs (htdemucs model) - state-of-the-art open source source separation
 - 🐍 Works with Python 3.8+ including Python 3.14
 - 🔧 Works around torchcodec/ffmpeg compatibility issues
+- 🖥️ **Graphical User Interface** available - no command line needed!
 
 ## Installation
 
@@ -30,7 +31,24 @@ You need **ffmpeg** for MP3 decoding/encoding:
 
 ## Usage
 
-### Basic usage (output both WAV and MP3)
+### Graphical User Interface (Recommended)
+
+Just run:
+```bash
+python gui.py
+```
+
+A GUI window will open, just:
+1. Click **[Select File]** to choose your MP3
+2. Output directory will be set automatically (defaults to `input_folder/output/`)
+3. Click **[Start Processing]** and wait
+4. When done, it will automatically open the output folder for you
+
+<p align="center">
+  <img src="docs/gui-screenshot.png" alt="GUI Screenshot" width="600">
+</p>
+
+### Command Line Usage
 
 ```bash
 # Add ffmpeg to PATH (if not already in PATH)

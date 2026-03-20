@@ -80,7 +80,14 @@ class VocalRemoverGUI:
         auto_open_check = tk.Checkbutton(options_frame, text="处理完成后自动打开输出文件夹", variable=self.auto_open_var)
         auto_open_check.pack(anchor="w")
 
-        # 日志 Frame - 使用固定高度，不抢占按钮空间
+        # 按钮放在日志上面，保证一定看得见
+        btn_frame = tk.Frame(self.root, padx=10, pady=10)
+        btn_frame.pack(fill="x")
+
+        self.start_btn = tk.Button(btn_frame, text="🚀 开始处理", command=self.start_processing, bg="#4CAF50", fg="white", font=("Arial", 12, "bold"), height=2)
+        self.start_btn.pack(expand=True)
+
+        # 日志 Frame - 放在按钮下面，占用剩余空间
         log_frame = tk.LabelFrame(self.root, text="运行日志", padx=10, pady=10)
         log_frame.pack(fill="both", expand=True, padx=10, pady=5)
 
@@ -92,13 +99,6 @@ class VocalRemoverGUI:
         scrollbar = tk.Scrollbar(log_frame, command=self.log_text.yview)
         scrollbar.pack(side="right", fill="y")
         self.log_text.config(yscrollcommand=scrollbar.set)
-
-        # 底部按钮
-        btn_frame = tk.Frame(self.root, padx=10, pady=10)
-        btn_frame.pack(fill="x")
-
-        self.start_btn = tk.Button(btn_frame, text="🚀 开始处理", command=self.start_processing, bg="#4CAF50", fg="white", font=("Arial", 12, "bold"), height=2)
-        self.start_btn.pack(expand=True)
 
     def select_input_file(self):
         file_path = filedialog.askopenfilename(
